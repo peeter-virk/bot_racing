@@ -32,7 +32,7 @@ int main()
 
 
     int thrust;
-    double pmul = 0.04;
+    double pmul = 0.06;
     int last = 100;
 
     int last_time = time(&timer);
@@ -49,6 +49,7 @@ int main()
         // To debug: cerr << "Debug messages..." << endl;
 
         thrust = max(0, min(100 ,int(next_checkpoint_dist * pmul + 40))) * cos(2*3.14*(next_checkpoint_angle/180));
+        if (abs(next_checkpoint_angle) > 50) thrust = 0;
         // You have to output the target position
         // followed by the power (0 <= thrust <= 100)
         // i.e.: "x y thrust"
