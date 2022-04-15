@@ -3,7 +3,6 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
-#include <time.h>
 
 using namespace std;
 
@@ -11,11 +10,14 @@ using namespace std;
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
  **/
-
-
 struct coordinate {
     int x;
     int y;
+};
+
+struct vector2D {
+    float x;
+    float y;
 };
 
 double distance(coordinate a, coordinate b)
@@ -25,85 +27,64 @@ double distance(coordinate a, coordinate b)
     return(sqrt((x*x+y*y)));
 }
 
+vector2D vec(coordinate from, coordinate to)
+{
+    float angle = atan2(to.y - from.y, to.x-from.x);
+    vector2D vector = {(cos(angle)), (sin(angle))};
+    return(vector);
+}
+
+
 int main()
 {
-    int min_boost_degrees = 5;
-    double pmul = 0.06;
-    int min_thrust_angle = 85;
+    int minimum_power_angle = 55;
+    int minimum_boost_distance = 6000;
+    int minimum_boost_angle = 2;
+    int low_thrust = 30;
 
-
-    time_t timer;
-    coordinate bot {0, 0};
-    int next_checkpoint_x; // x position of the next check point
-    int next_checkpoint_y; // y position of the next check point
+    coordinate player;
+    coordinate last_player_position;
+    coordinate opponent;
+    coordinate next_checkpoint;
+    coordinate last_checkpoint;
     int next_checkpoint_dist; // distance to the next checkpoint
     int next_checkpoint_angle; // angle between your pod orientation and the direction of the next checkpoint
 
-    int opponent_x;
-    int opponent_y;
-
-
     int thrust;
-    int last = 100;
-
-    int longest_run_index = 0;
-    double longest_run = 0;
-    int current_index = 0;
-    coordinate first_target;
-    coordinate current_target;
-    coordinate last_target;
-    bool first_time = true;
-    bool boost_enabled = false;
-
     int boosts = 1;
 
     // game loop
     while (1) {
+        // set thrust to maximum
+        thrust = 100;
         
-        cin >> bot.x >> bot.y >> next_checkpoint_x >> next_checkpoint_y >> next_checkpoint_dist >> next_checkpoint_angle; cin.ignore();
+        //take input
+        cin >> player.x >> player.y >> next_checkpoint.x >> next_checkpoint.y >> next_checkpoint_dist >> next_checkpoint_angle; cin.ignore();
+
+        cin >> opponent.x >> opponent.y; cin.ignore();
+
+        // lower thrust when pointing away from target
+        if (abs(next_checkpoint_angle) >= minimum_power_angle)
+        {
+            thrust = low_thrust;
+        }
         
-        cin >> opponent_x >> opponent_y; cin.ignore();
+        //calculate momentum and target vectors
+        vector2D v = vec(last_player_position, player);
+        vector2D r = vec(last_player_position, next_checkpoint);
+        last_player_position = player;
 
-        if (first_time)
+        // debug outbut
+        cerr << "current: " << v.x << " " << v.y << " target: " << r.x << " " << r.y << " predicted: " << r.x + (r.x - v.x) << " " << r.y + (r.y -v.x)<< endl;
+        if (boosts > 0 && next_checkpoint_dist >= minimum_boost_distance && abs(next_checkpoint_angle) <= minimum_boost_angle)
         {
-            first_target = {next_checkpoint_x, next_checkpoint_y};
-            current_target = {next_checkpoint_x, next_checkpoint_y};
-            last_target = {next_checkpoint_x, next_checkpoint_y};
-            first_time = false;
+            cout << next_checkpoint.x << " " << next_checkpoint.y << " " << "BOOST" << endl;
+            boosts --;
         }
-        current_target = {next_checkpoint_x, next_checkpoint_y};
-        
-        if (current_target.x != last_target.x || current_target.y != last_target.y)
+        else
         {
-            current_index += 1;
-            if (current_target.x == first_target.x || current_target.y == first_target.y) 
-            {
-                current_index = 0;
-                boost_enabled = true;
-            };
-            if (distance(current_target, last_target) > longest_run)
-            {
-                longest_run_index = current_index;
-                longest_run = distance(current_target, last_target);
-            }
-            last_target = current_target;
+            //cout << next_checkpoint.x << " " << next_checkpoint.y << " " << thrust << endl;   // always steer toward target
+            cout <<  player.x + int((r.x + (r.x - v.x))*next_checkpoint_dist) << " " << player.y + int((r.y + (r.y - v.y))*next_checkpoint_dist) << " " << thrust << endl; // point movement vector toward target
         }
-
-        // Write an action using cout. DON'T FORGET THE "<< endl"
-        // To debug: cerr << "Debug messages..." << endl;
-
-        thrust = max(0, min(100 ,int(next_checkpoint_dist * pmul + 40))) * (cos(2*3.14*(next_checkpoint_angle/180)));
-        if (abs(next_checkpoint_angle) > min_thrust_angle) thrust = 0;
-        // You have to output the target position
-        // followed by the power (0 <= thrust <= 100)
-        // i.e.: "x y thrust"
-        if (boost_enabled && boosts > 0 && abs(next_checkpoint_angle) < min_boost_degrees && current_index == longest_run_index)
-        {
-            cout << next_checkpoint_x << " " << next_checkpoint_y << " " << "BOOST" << endl;
-            boosts -= 1;
-        }
-        else cout << next_checkpoint_x << " " << next_checkpoint_y << " " << thrust << endl;
     }
 }
-
-
