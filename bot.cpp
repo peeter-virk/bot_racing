@@ -37,8 +37,8 @@ vector2D vec(coordinate from, coordinate to)
 
 int main()
 {
-    int minimum_power_angle = 55;
-    int minimum_boost_distance = 6000;
+    int minimum_power_angle = 80;
+    int minimum_boost_distance = 4000;
     int minimum_boost_angle = 2;
     int low_thrust = 30;
 
